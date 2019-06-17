@@ -64,6 +64,16 @@ public class ImagePreviewAdapter extends PagerAdapter implements PhotoViewAttach
         return (ImageView) currentView.findViewById(R.id.pv);
     }
 
+    public interface OnImageLongClickListener{
+        void onImageLongClick(Context context,String url);
+    }
+
+    OnImageLongClickListener onImageLongClickListener;
+
+    public void setOnImageLongClickListener(OnImageLongClickListener onImageLongClickListener) {
+        this.onImageLongClickListener = onImageLongClickListener;
+    }
+    
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
         View view = LayoutInflater.from(context).inflate(R.layout.item_photoview, container, false);
@@ -95,7 +105,13 @@ public class ImagePreviewAdapter extends PagerAdapter implements PhotoViewAttach
 //                        return false;
 //                    }
 //                }).into(imageView);
-
+        holder.ivHead.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    onImageLongClickListener.onImageLongClick(context,info.bigImageUrl);
+                    return false;
+                }
+         });
         container.addView(view);
         return view;
     }
