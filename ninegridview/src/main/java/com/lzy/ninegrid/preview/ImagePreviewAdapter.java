@@ -108,12 +108,61 @@ public class ImagePreviewAdapter extends PagerAdapter implements PhotoViewAttach
         holder.ivHead.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    onImageLongClickListener.onImageLongClick(context,info.bigImageUrl);
+                    if(onImageLongClickListener!=null){
+                        onImageLongClickListener.onImageLongClick(context,info.bigImageUrl);
+                    }else{
+                        showSaveImgConfrim(context,info.bigImageUrl);
+                    }
                     return false;
                 }
          });
         container.addView(view);
         return view;
+    }
+    
+    private void showSaveImgConfrim(Context context,String url){
+        Dialog newDialog = new Dialog(context, R.style.myDialogTheme);
+        View view = LayoutInflater.from(context).inflate(R.layout.confirm_dialog, null);
+        newDialog.setContentView(view);
+        newDialog.setCanceledOnTouchOutside(false);
+        TextView tvTips = view.findViewById(R.id.tv_tips);
+        tvTips.setText("是否保存图片到本地？");
+        view.findViewById(R.id.tvConfirm).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DownPicUtil.downPic(url, new DownPicUtil.DownFinishListener() {
+                            @Override
+                            public void getDownPath(String s) {
+                               Toast.makeText(context,"图片已保存",Toast.LENGTH_SHORT).show();
+                               sendBoardCast(new File(s));
+                            }
+                        })
+                newDialog.dismiss();
+            }
+        });
+        // 设置对话框的出现位置，借助于window对象
+        Window win = newDialog.getWindow();
+        win.setGravity(Gravity.CENTER);
+        // 弹出对话框时，底部窗体，不变暗。
+        WindowManager.LayoutParams lp = win.getAttributes();
+        if (UiCommon.widthPixels == 320) {
+            DisplayMetrics dm = new DisplayMetrics();
+            context.getWindowManager().getDefaultDisplay().getMetrics(dm);
+            UiCommon.widthPixels = dm.widthPixels;
+        }
+        lp.width = (int) (UiCommon.widthPixels * 0.7);
+        win.setAttributes(lp);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {//8.0新特性
+            newDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
+        }
+        newDialog.show();
+    }
+    
+    private void sendBoardCast(File file){
+        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        Uri uri = Uri.fromFile(file);
+        intent.setData(uri);
+        context.sendBroadcast(intent);
     }
 
     /** 展示过度图片 */
