@@ -68,10 +68,6 @@ public class ImagePreviewActivity extends Activity implements ViewTreeObserver.O
         tv_pager.setText(String.format(getString(R.string.select), currentItem + 1, imageInfo.size()));
     }
     
-    public static ImagePreviewAdapter getImagePreviewAdapterInstance{
-        return imagePreviewAdapter;
-    }
-    
     @Override
     public void onBackPressed() {
         finishActivityAnim();
