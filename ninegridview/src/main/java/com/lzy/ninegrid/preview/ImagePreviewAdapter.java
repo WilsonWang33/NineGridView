@@ -1,19 +1,32 @@
 package com.lzy.ninegrid.preview;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.view.PagerAdapter;
+import android.util.DisplayMetrics;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.lzy.ninegrid.ImageInfo;
 import com.lzy.ninegrid.NineGridView;
 import com.lzy.ninegrid.R;
 
+import java.io.File;
 import java.util.List;
 
 import uk.co.senab.photoview.PhotoView;
@@ -80,13 +93,14 @@ public class ImagePreviewAdapter extends PagerAdapter implements PhotoViewAttach
         final ProgressBar pb = (ProgressBar) view.findViewById(R.id.pb);
         final PhotoView imageView = (PhotoView) view.findViewById(R.id.pv);
 
-        ImageInfo info = this.imageInfo.get(position);
+        final ImageInfo info = this.imageInfo.get(position);
         imageView.setOnPhotoTapListener(this);
         showExcessPic(info, imageView);
 
         //如果需要加载的loading,需要自己改写,不能使用这个方法
         NineGridView.getImageLoader().onDisplayImage(view.getContext(), imageView, info.bigImageUrl);
 
+        final String url = info.bigImageUrl;
 //        pb.setVisibility(View.VISIBLE);
 //        Glide.with(context).load(info.bigImageUrl)//
 //                .placeholder(R.drawable.ic_default_image)//
@@ -105,13 +119,13 @@ public class ImagePreviewAdapter extends PagerAdapter implements PhotoViewAttach
 //                        return false;
 //                    }
 //                }).into(imageView);
-        holder.ivHead.setOnLongClickListener(new View.OnLongClickListener() {
+        imageView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
                     if(onImageLongClickListener!=null){
-                        onImageLongClickListener.onImageLongClick(context,info.bigImageUrl);
+                        onImageLongClickListener.onImageLongClick(context,url);
                     }else{
-                        showSaveImgConfrim(context,info.bigImageUrl);
+                        showSaveImgConfrim(context,url);
                     }
                     return false;
                 }
@@ -120,42 +134,21 @@ public class ImagePreviewAdapter extends PagerAdapter implements PhotoViewAttach
         return view;
     }
     
-    private void showSaveImgConfrim(Context context,String url){
-        Dialog newDialog = new Dialog(context, R.style.myDialogTheme);
-        View view = LayoutInflater.from(context).inflate(R.layout.confirm_dialog, null);
-        newDialog.setContentView(view);
-        newDialog.setCanceledOnTouchOutside(false);
-        TextView tvTips = view.findViewById(R.id.tv_tips);
-        tvTips.setText("是否保存图片到本地？");
-        view.findViewById(R.id.tvConfirm).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                DownPicUtil.downPic(url, new DownPicUtil.DownFinishListener() {
+    private void showSaveImgConfrim(final Context context, final String url){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setMessage("是否保存图片到本地？").setCancelable(true)
+                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        DownPicUtil.downPic(url, new DownPicUtil.DownFinishListener() {
                             @Override
                             public void getDownPath(String s) {
-                               Toast.makeText(context,"图片已保存",Toast.LENGTH_SHORT).show();
-                               sendBoardCast(new File(s));
+                                Toast.makeText(context,"图片已保存",Toast.LENGTH_SHORT).show();
+                                sendBoardCast(new File(s));
                             }
-                        })
-                newDialog.dismiss();
-            }
-        });
-        // 设置对话框的出现位置，借助于window对象
-        Window win = newDialog.getWindow();
-        win.setGravity(Gravity.CENTER);
-        // 弹出对话框时，底部窗体，不变暗。
-        WindowManager.LayoutParams lp = win.getAttributes();
-        if (UiCommon.widthPixels == 320) {
-            DisplayMetrics dm = new DisplayMetrics();
-            context.getWindowManager().getDefaultDisplay().getMetrics(dm);
-            UiCommon.widthPixels = dm.widthPixels;
-        }
-        lp.width = (int) (UiCommon.widthPixels * 0.7);
-        win.setAttributes(lp);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {//8.0新特性
-            newDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
-        }
-        newDialog.show();
+                        });
+                    }
+                }).setNegativeButton("取消",null).create().show();
     }
     
     private void sendBoardCast(File file){
