@@ -15,4 +15,12 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:visibility="gone"/>
+    <ImageView
+        android:id="@+id/download_pic"
+        android:layout_width="20dp"
+        android:layout_height="30dp"
+        android:src="@drawable/icons8-download-96"
+        android:layout_gravity="end|bottom"
+        android:layout_marginBottom="20dp"
+        android:layout_marginRight="20dp"/>
 </FrameLayout>

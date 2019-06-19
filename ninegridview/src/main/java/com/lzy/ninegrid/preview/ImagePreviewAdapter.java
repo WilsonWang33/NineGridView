@@ -130,6 +130,13 @@ public class ImagePreviewAdapter extends PagerAdapter implements PhotoViewAttach
                     return false;
                 }
          });
+
+        view.findViewById(R.id.download_pic).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showSaveImgConfrim(context,url);
+            }
+        });
         container.addView(view);
         return view;
     }
